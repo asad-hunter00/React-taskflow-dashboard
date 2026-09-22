@@ -334,7 +334,7 @@ function Login() {
 
         <FormSide>
           <div>
-            <Logo><img src={taskflowLogo} style={{ width: "50px", height: "50px",  }} alt="" />TaskFlow</Logo>
+            <Logo><img src={taskflowLogo} style={{ width: "50px", height: "50px", }} alt="" />TaskFlow</Logo>
 
             <Title>Welcome back to Taskflow!</Title>
 
@@ -406,7 +406,7 @@ function Login() {
                   Remember me
                 </Remember>
 
-               <Link to="/forget" style={{ textDecoration: "none" }}> <Forgot>Forgot password?</Forgot></Link>
+                <Link to="/forget" style={{ textDecoration: "none" }}> <Forgot>Forgot password?</Forgot></Link>
               </Options>
 
               <Button type="submit" disabled={loading}>

@@ -1,32 +1,36 @@
+import Sidebar from "../components/Sidebar";
+import Header from "../components/Header";
+import DashboardOverview from "../components/DashboardView";
 import styled from "styled-components";
 
 const Page = styled.div`
   min-height: 100vh;
-  background: #f5f7fb;
-  padding: 40px;
+  display: flex;
+  background: #ffffff;
+  border-top-left-radius: 30px;
 `;
 
-const Container = styled.div`
-  max-width: 1200px;
-  margin: 0 auto;
+const Content = styled.main`
+  flex: 1;
+  min-width: 0;
 `;
 
-const Title = styled.h1`
-  font-size: 32px;
-  color: #111827;
-`;
-
-const Text = styled.p`
-  color: #6b7280;
+const Dashboard = styled.div`
+  padding: 24px 28px;
 `;
 
 function Main() {
   return (
     <Page>
-      <Container>
-        <Title>Welcome to Taskflow 👋</Title>
-        <Text>Manage your tasks, projects and team in one place.</Text>
-      </Container>
+      <Sidebar />
+
+      <Content>
+        <Header />
+
+        <Dashboard>
+          <DashboardOverview />
+        </Dashboard>
+      </Content>
     </Page>
   );
 }
