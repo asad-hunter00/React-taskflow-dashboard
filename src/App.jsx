@@ -6,6 +6,7 @@ import VerifyOTP from "./components/VerifyOTP";
 import ResetPassword from "./components/ResetPassword";
 import Main from "./pages/Main";
 import useAuth from "./store/useAuth";
+import ProjectDetails from "./components/ProjectDetails";
 
 function App() {
   const token = useAuth((state) => state.token);
@@ -28,6 +29,10 @@ function App() {
         <Route
           path="/"
           element={<Navigate to={token ? "/main" : "/login"} replace />}
+        />
+        <Route
+          path="/projects/:id"
+          element={<ProjectDetails />}
         />
       </Routes>
     </BrowserRouter>

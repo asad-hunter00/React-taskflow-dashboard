@@ -1,6 +1,6 @@
 import Sidebar from "../components/Sidebar";
 import Header from "../components/Header";
-import DashboardOverview from "../components/DashboardView";
+import DashboardOverview from "../components/DashboardView.jsx";
 import styled from "styled-components";
 
 const Page = styled.div`
