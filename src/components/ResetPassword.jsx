@@ -198,7 +198,7 @@ const Input = styled.input`
 
   &:focus {
     border-color: ${({ error }) =>
-        error ? "#e0433a" : "#ff6b1a"};
+    error ? "#e0433a" : "#ff6b1a"};
   }
 `;
 
@@ -271,241 +271,252 @@ const Footer = styled.div`
 `;
 
 function ResetPassword() {
-    const navigate = useNavigate();
-    const location = useLocation();
+  const navigate = useNavigate();
+  const location = useLocation();
 
-    const email = location.state?.email || "";
-    const otp = location.state?.otp || "";
+  const email = location.state?.email || "";
+  const otp = location.state?.otp || "";
 
-    const [loading, setLoading] = useState(false);
-    const [message, setMessage] = useState("");
-    const [success, setSuccess] = useState("");
-    const [showPassword, setShowPassword] = useState(false);
-    const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+  const from = location.state?.from || "";
 
-    const {
-        register,
-        handleSubmit,
-        watch,
-        formState: { errors },
-    } = useForm();
+  const [loading, setLoading] = useState(false);
+  const [message, setMessage] = useState("");
+  const [success, setSuccess] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
 
-    const password = watch("newPassword");
+  const {
+    register,
+    handleSubmit,
+    watch,
+    formState: { errors },
+  } = useForm();
 
-    const onSubmit = async (data) => {
-        setMessage("");
-        setSuccess("");
+  const password = watch("newPassword");
 
-        if (!email || !otp) {
-            setMessage("Email yoki OTP topilmadi. Iltimos, jarayonni qaytadan boshlang.");
-            return;
-        }
+  const onSubmit = async (data) => {
+    setMessage("");
+    setSuccess("");
 
-        console.log({
+    if (!email || !otp) {
+      setMessage("Email yoki OTP topilmadi. Iltimos, jarayonni qaytadan boshlang.");
+      return;
+    }
+
+    console.log({
+      email,
+      otp,
+      newPassword: data.newPassword,
+      confirmPassword: data.confirmPassword,
+    });
+
+    setLoading(true);
+
+    try {
+      const response = await fetch(
+        `${API_URL}/api/auth/reset-password`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
             email,
             otp,
             newPassword: data.newPassword,
             confirmPassword: data.confirmPassword,
-        });
-
-        setLoading(true);
-
-        try {
-            const response = await fetch(
-                `${API_URL}/api/auth/reset-password`,
-                {
-                    method: "POST",
-                    headers: {
-                        "Content-Type": "application/json",
-                    },
-                    body: JSON.stringify({
-                        email,
-                        otp,
-                        newPassword: data.newPassword,
-                        confirmPassword: data.confirmPassword,
-                    }),
-                }
-            );
-
-            const result = await response.json();
-
-            if (!response.ok) {
-                setMessage(result.message || "Reset password failed");
-                return;
-            }
-
-            setSuccess("Password changed successfully!");
-
-            setTimeout(() => {
-                navigate("/login");
-            }, 1200);
-        } catch {
-            setMessage("Server bilan bog'lanishda xatolik");
-        } finally {
-            setLoading(false);
+          }),
         }
-    };
+      );
 
-    return (
-        <Wrapper>
-            <Card>
-                <ImageSide>
-                    <img
-                        src="https://i.pinimg.com/736x/41/74/7e/41747e78e01b6cde9c6201cd8ad8546d.jpg"
-                        alt="Taskflow"
+      const result = await response.json();
+
+      if (!response.ok) {
+        setMessage(result.message || "Reset password failed");
+        return;
+      }
+
+      setSuccess("Password changed successfully!");
+
+      setTimeout(() => {
+        if (from === "profile") {
+          navigate("/profile");
+        } else {
+          navigate("/login");
+        }
+      }, 1200);
+    } catch {
+      setMessage("Server bilan bog'lanishda xatolik");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  return (
+    <Wrapper>
+      <Card>
+        <ImageSide>
+          <img
+            src="https://i.pinimg.com/736x/41/74/7e/41747e78e01b6cde9c6201cd8ad8546d.jpg"
+            alt="Taskflow"
+          />
+        </ImageSide>
+
+        <FormSide>
+          <div>
+            <Logo>
+              <img src={taskflowLogo} alt="Taskflow" />
+              Taskflow
+            </Logo>
+
+            <Content>
+              {from !== "profile" && (
+                <Back
+                  onClick={() =>
+                    navigate("/verify-otp", {
+                      state: {
+                        email,
+                        from,
+                      },
+                    })
+                  }
+                >
+                  <ArrowLeft size={14} />
+                  Back
+                </Back>
+              )}
+
+              <Title>Change password</Title>
+
+              <Subtitle>
+                Enter your new password below
+              </Subtitle>
+
+              <form onSubmit={handleSubmit(onSubmit)}>
+                <Label>New password</Label>
+
+                <InputGroup>
+                  <Lock size={16} />
+
+                  <Input
+                    type={showPassword ? "text" : "password"}
+                    placeholder="Enter new password"
+                    error={errors.newPassword}
+                    {...register("newPassword", {
+                      required: "Password is required",
+                      minLength: {
+                        value: 8,
+                        message:
+                          "Password must be at least 8 characters",
+                      },
+                    })}
+                  />
+
+                  <IconButton
+                    type="button"
+                    onClick={() =>
+                      setShowPassword(!showPassword)
+                    }
+                    sx={{
+                      position: "absolute",
+                      right: "5px",
+                      top: "50%",
+                      transform: "translateY(-50%)",
+                    }}
+                  >
+                    {showPassword ? (
+                      <VisibilityOff fontSize="small" />
+                    ) : (
+                      <Visibility fontSize="small" />
+                    )}
+                  </IconButton>
+                </InputGroup>
+
+                {errors.newPassword && (
+                  <ErrorText>
+                    {errors.newPassword.message}
+                  </ErrorText>
+                )}
+
+                <Label>Repeat password</Label>
+
+                <InputGroup>
+                  <Lock size={16} />
+
+                  <Input
+                    type={
+                      showConfirmPassword ? "text" : "password"
+                    }
+                    placeholder="Repeat your password"
+                    error={errors.confirmPassword}
+                    {...register("confirmPassword", {
+                      required: "Please repeat your password",
+                      validate: (value) =>
+                        value === password ||
+                        "Passwords do not match",
+                    })}
+                  />
+
+                  <IconButton
+                    type="button"
+                    onClick={() =>
+                      setShowConfirmPassword(
+                        !showConfirmPassword
+                      )
+                    }
+                    sx={{
+                      position: "absolute",
+                      right: "5px",
+                      top: "50%",
+                      transform: "translateY(-50%)",
+                    }}
+                  >
+                    {showConfirmPassword ? (
+                      <VisibilityOff fontSize="small" />
+                    ) : (
+                      <Visibility fontSize="small" />
+                    )}
+                  </IconButton>
+                </InputGroup>
+
+                {errors.confirmPassword && (
+                  <ErrorText>
+                    {errors.confirmPassword.message}
+                  </ErrorText>
+                )}
+
+                <Button type="submit" disabled={loading}>
+                  {loading ? (
+                    <CircularProgress
+                      size={20}
+                      sx={{ color: "white" }}
                     />
-                </ImageSide>
+                  ) : (
+                    "Verify"
+                  )}
+                </Button>
+              </form>
 
-                <FormSide>
-                    <div>
-                        <Logo>
-                            <img src={taskflowLogo} alt="Taskflow" />
-                            Taskflow
-                        </Logo>
+              {message && <ServerError>{message}</ServerError>}
 
-                        <Content>
-                            <Back
-                                onClick={() =>
-                                    navigate("/verify-otp", {
-                                        state: { email },
-                                    })
-                                }
-                            >
-                                <ArrowLeft size={14} />
-                                Back
-                            </Back>
+              {success && (
+                <SuccessText>{success}</SuccessText>
+              )}
+            </Content>
+          </div>
 
-                            <Title>Change password</Title>
+          <Footer>
+            <span>© Taskflow 2026</span>
 
-                            <Subtitle>
-                                Enter your new password below
-                            </Subtitle>
-
-                            <form onSubmit={handleSubmit(onSubmit)}>
-                                <Label>New password</Label>
-
-                                <InputGroup>
-                                    <Lock size={16} />
-
-                                    <Input
-                                        type={showPassword ? "text" : "password"}
-                                        placeholder="Enter new password"
-                                        error={errors.newPassword}
-                                        {...register("newPassword", {
-                                            required: "Password is required",
-                                            minLength: {
-                                                value: 8,
-                                                message:
-                                                    "Password must be at least 8 characters",
-                                            },
-                                        })}
-                                    />
-
-                                    <IconButton
-                                        type="button"
-                                        onClick={() =>
-                                            setShowPassword(!showPassword)
-                                        }
-                                        sx={{
-                                            position: "absolute",
-                                            right: "5px",
-                                            top: "50%",
-                                            transform: "translateY(-50%)",
-                                        }}
-                                    >
-                                        {showPassword ? (
-                                            <VisibilityOff fontSize="small" />
-                                        ) : (
-                                            <Visibility fontSize="small" />
-                                        )}
-                                    </IconButton>
-                                </InputGroup>
-
-                                {errors.newPassword && (
-                                    <ErrorText>
-                                        {errors.newPassword.message}
-                                    </ErrorText>
-                                )}
-
-                                <Label>Repeat password</Label>
-
-                                <InputGroup>
-                                    <Lock size={16} />
-
-                                    <Input
-                                        type={
-                                            showConfirmPassword ? "text" : "password"
-                                        }
-                                        placeholder="Repeat your password"
-                                        error={errors.confirmPassword}
-                                        {...register("confirmPassword", {
-                                            required: "Please repeat your password",
-                                            validate: (value) =>
-                                                value === password ||
-                                                "Passwords do not match",
-                                        })}
-                                    />
-
-                                    <IconButton
-                                        type="button"
-                                        onClick={() =>
-                                            setShowConfirmPassword(
-                                                !showConfirmPassword
-                                            )
-                                        }
-                                        sx={{
-                                            position: "absolute",
-                                            right: "5px",
-                                            top: "50%",
-                                            transform: "translateY(-50%)",
-                                        }}
-                                    >
-                                        {showConfirmPassword ? (
-                                            <VisibilityOff fontSize="small" />
-                                        ) : (
-                                            <Visibility fontSize="small" />
-                                        )}
-                                    </IconButton>
-                                </InputGroup>
-
-                                {errors.confirmPassword && (
-                                    <ErrorText>
-                                        {errors.confirmPassword.message}
-                                    </ErrorText>
-                                )}
-
-                                <Button type="submit" disabled={loading}>
-                                    {loading ? (
-                                        <CircularProgress
-                                            size={20}
-                                            sx={{ color: "white" }}
-                                        />
-                                    ) : (
-                                        "Verify"
-                                    )}
-                                </Button>
-                            </form>
-
-                            {message && <ServerError>{message}</ServerError>}
-
-                            {success && (
-                                <SuccessText>{success}</SuccessText>
-                            )}
-                        </Content>
-                    </div>
-
-                    <Footer>
-                        <span>© Taskflow 2026</span>
-
-                        <div>
-                            <a href="#">Privacy Policy</a>
-                            <a href="#">Support</a>
-                        </div>
-                    </Footer>
-                </FormSide>
-            </Card>
-        </Wrapper>
-    );
+            <div>
+              <a href="#">Privacy Policy</a>
+              <a href="#">Support</a>
+            </div>
+          </Footer>
+        </FormSide>
+      </Card>
+    </Wrapper>
+  );
 }
 
 export default ResetPassword;

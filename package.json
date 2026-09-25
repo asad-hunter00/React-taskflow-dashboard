@@ -22,6 +22,7 @@
     "react-hook-form": "^7.88.0",
     "react-router": "^8.4.0",
     "react-toastify": "^11.1.0",
+    "socket.io-client": "^4.8.3",
     "styled-components": "^6.5.3",
     "zustand": "^5.0.15"
   },

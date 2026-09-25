@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { useNavigate } from "react-router";
+import { useLocation, useNavigate } from "react-router";
 import { useForm } from "react-hook-form";
 import styled from "styled-components";
 import { Mail, ArrowLeft } from "lucide-react";
@@ -194,7 +194,7 @@ const Input = styled.input`
 
   &:focus {
     border-color: ${({ error }) =>
-        error ? "#e0433a" : "#ff6b1a"};
+    error ? "#e0433a" : "#ff6b1a"};
   }
 `;
 
@@ -281,138 +281,159 @@ const Footer = styled.div`
 `;
 
 function ForgotPassword() {
-    const navigate = useNavigate();
-    const [loading, setLoading] = useState(false);
-    const [message, setMessage] = useState("");
+  const navigate = useNavigate();
+  const location = useLocation();
 
-    const {
-        register,
-        handleSubmit,
-        formState: { errors },
-    } = useForm();
+  const from = location.state?.from || "";
+  const profileEmail = location.state?.email || "";
 
-    const onSubmit = async (data) => {
-        setMessage("");
-        setLoading(true);
+  const [loading, setLoading] = useState(false);
+  const [message, setMessage] = useState("");
 
-        try {
-            const response = await fetch(
-                `${API_URL}/api/auth/forgot-password`,
-                {
-                    method: "POST",
-                    headers: {
-                        "Content-Type": "application/json",
-                    },
-                    body: JSON.stringify({
-                        email: data.email,
-                    }),
-                }
-            );
+  const {
+    register,
+    handleSubmit,
+    formState: { errors },
+  } = useForm();
 
-            const result = await response.json();
+  const onSubmit = async (data) => {
+    setMessage("");
+    setLoading(true);
 
-            if (!response.ok) {
-                setMessage(result.message || "Something went wrong");
-                return;
-            }
-
-            navigate("/verify-otp", {
-                state: {
-                    email: data.email,
-                },
-            });
-        } catch {
-            setMessage("Server bilan bog'lanishda xatolik");
-        } finally {
-            setLoading(false);
+    try {
+      const response = await fetch(
+        `${API_URL}/api/auth/forgot-password`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            email: data.email,
+          }),
         }
-    };
+      );
 
-    return (
-        <Wrapper>
-            <Card>
-                <ImageSide>
-                    <img
-                        src="https://i.pinimg.com/736x/41/74/7e/41747e78e01b6cde9c6201cd8ad8546d.jpg"
-                        alt="Taskflow"
+      const result = await response.json();
+
+      if (!response.ok) {
+        setMessage(
+          result.message || "Something went wrong"
+        );
+        return;
+      }
+
+      navigate("/verify-otp", {
+        state: {
+          email: data.email,
+          from,
+        },
+      });
+    } catch {
+      setMessage("Server bilan bog'lanishda xatolik");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  return (
+    <Wrapper>
+      <Card>
+        <ImageSide>
+          <img
+            src="https://i.pinimg.com/736x/41/74/7e/41747e78e01b6cde9c6201cd8ad8546d.jpg"
+            alt="Taskflow"
+          />
+        </ImageSide>
+
+        <FormSide>
+          <div>
+            <Logo>
+              <img src={taskflowLogo} alt="Taskflow" />
+              Taskflow
+            </Logo>
+
+            <Back onClick={() => navigate("/profile")} style={{ display: "flex", alignItems: "center", gap: "5px", fontSize: "12px", color: "#888", margin: "10px 0 22px", paddingLeft: "65px", cursor: "pointer", fontFamily: "sans-serif" }}>
+              <ArrowLeft size={14} />
+              Back
+            </Back>
+
+
+
+            <FormContent>
+              {from !== "profile" && (
+                <Back onClick={() => navigate("/login")}>
+                  <ArrowLeft size={14} />
+                  Back
+                </Back>
+              )}
+
+              <Title>Forgot your password?</Title>
+
+              <Subtitle>
+                Type in your email and we will send you a
+                code to reset your password!
+              </Subtitle>
+
+              <form onSubmit={handleSubmit(onSubmit)}>
+                <Label>Your email</Label>
+
+                <InputGroup>
+                  <Mail size={16} />
+
+                  <Input
+                    type="email"
+                    placeholder="Enter your email"
+                    defaultValue={profileEmail}
+                    error={errors.email}
+                    {...register("email", {
+                      required: "Email is required",
+                    })}
+                  />
+                </InputGroup>
+
+                {errors.email && (
+                  <ErrorText>
+                    {errors.email.message}
+                  </ErrorText>
+                )}
+
+                <Terms>
+                  <input type="checkbox" required />
+                  I accept the{" "}
+                  <span>Terms and Conditions</span>
+                </Terms>
+
+                <Button type="submit" disabled={loading}>
+                  {loading ? (
+                    <CircularProgress
+                      size={20}
+                      sx={{ color: "white" }}
                     />
-                </ImageSide>
+                  ) : (
+                    "Verify"
+                  )}
+                </Button>
+              </form>
 
-                <FormSide>
-                    <div>
-                        <Logo>
-                            <img src={taskflowLogo} alt="Taskflow" />
-                            Taskflow
-                        </Logo>
+              {message && (
+                <ServerError>{message}</ServerError>
+              )}
+            </FormContent>
+          </div>
 
-                        <FormContent>
-                            <Back onClick={() => navigate("/login")}>
-                                <ArrowLeft size={14} />
-                                Back
-                            </Back>
+          <Footer>
+            <span>© Taskflow 2026</span>
 
-                            <Title>Forgot your password?</Title>
-
-                            <Subtitle>
-                                Type in your email and we will send you a code to reset
-                                your password!
-                            </Subtitle>
-
-                            <form onSubmit={handleSubmit(onSubmit)}>
-                                <Label>Your email</Label>
-
-                                <InputGroup>
-                                    <Mail size={16} />
-
-                                    <Input
-                                        type="email"
-                                        placeholder="Enter your email"
-                                        error={errors.email}
-                                        {...register("email", {
-                                            required: "Email is required",
-                                        })}
-                                    />
-                                </InputGroup>
-
-                                {errors.email && (
-                                    <ErrorText>{errors.email.message}</ErrorText>
-                                )}
-
-                                <Terms>
-                                    <input type="checkbox" required />
-                                    I accept the <span>Terms and Conditions</span>
-                                </Terms>
-
-                                <Button type="submit" disabled={loading}>
-                                    {loading ? (
-                                        <CircularProgress
-                                            size={20}
-                                            sx={{ color: "white" }}
-                                        />
-                                    ) : (
-                                        "Verify"
-                                    )}
-                                </Button>
-                            </form>
-
-                            {message && (
-                                <ServerError>{message}</ServerError>
-                            )}
-                        </FormContent>
-                    </div>
-
-                    <Footer>
-                        <span>© Taskflow 2026</span>
-
-                        <div>
-                            <a href="#">Privacy Policy</a>
-                            <a href="#">Support</a>
-                        </div>
-                    </Footer>
-                </FormSide>
-            </Card>
-        </Wrapper>
-    );
+            <div>
+              <a href="#">Privacy Policy</a>
+              <a href="#">Support</a>
+            </div>
+          </Footer>
+        </FormSide>
+      </Card>
+    </Wrapper>
+  );
 }
 
 export default ForgotPassword;

@@ -8,6 +8,7 @@ import {
   Settings,
 } from "@mui/icons-material";
 import styled from "styled-components";
+import { Link } from "react-router";
 
 const SidebarBox = styled.aside`
   width: 260px;
@@ -127,15 +128,21 @@ function Sidebar() {
       <Section>
         <p>General</p>
 
-        <Item active>
-          <Dashboard />
-          <span>Dashboard</span>
-        </Item>
+       <Link to="/main" style={{ textDecoration: "none", color: "inherit" }}>
+         <Item>
+           <Dashboard />
+           <span>Dashboard</span>
+         </Item>
+       </Link>
 
-        <Item>
-          <Folder />
-          <span>Projects</span>
-        </Item>
+        <Link to="/projects" style={{ textDecoration: "none", color: "inherit" }}>
+          <Item>
+            <Folder />
+
+            <span>Projects</span>
+
+          </Item>
+        </Link>
 
         <Item>
           <CheckBox />

@@ -423,6 +423,7 @@ function ProjectDetails() {
     const [project, setProject] = useState(null);
     const [tasks, setTasks] = useState([]);
     const [activities, setActivities] = useState([]);
+    const [teamMembers, setTeamMembers] = useState([]);
 
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState("");
@@ -447,6 +448,25 @@ function ProjectDetails() {
     const [taskStatus, setTaskStatus] = useState("TODO");
     const [taskPriority, setTaskPriority] = useState("MEDIUM");
     const [taskDueDate, setTaskDueDate] = useState("");
+    const [assignedTo, setAssignedTo] = useState("");
+
+    const loadTeamMembers = async () => {
+        try {
+            const response = await fetch(`${API_URL}/api/team/members`, {
+                headers: {
+                    Authorization: `Bearer ${token}`,
+                },
+            });
+
+            const result = await response.json();
+
+            if (response.ok) {
+                setTeamMembers(result?.data || []);
+            }
+        } catch (err) {
+            console.log(err);
+        }
+    };
 
     const loadProject = async () => {
         try {
@@ -517,6 +537,7 @@ function ProjectDetails() {
     useEffect(() => {
         if (token && id) {
             loadProject();
+            loadTeamMembers();
         }
     }, [token, id]);
 
@@ -625,6 +646,7 @@ function ProjectDetails() {
                     priority: taskPriority,
                     dueDate: taskDueDate || null,
                     projectId: id,
+                    assignedTo: assignedTo || undefined,
                 }),
             });
 
@@ -640,6 +662,7 @@ function ProjectDetails() {
             setTaskStatus("TODO");
             setTaskPriority("MEDIUM");
             setTaskDueDate("");
+            setAssignedTo("");
             setTaskOpen(false);
 
             await loadProject();
@@ -799,6 +822,7 @@ function ProjectDetails() {
                     </InfoCard>
 
                     <InfoCard>
+                        <InfoLabel>Due Date</InfoLabel>
                         <InfoValue>
                             {formatDate(project.dueDate)}
                         </InfoValue>
@@ -844,11 +868,7 @@ function ProjectDetails() {
                             <TaskItem key={task.id}>
                                 <TaskLeft>
                                     <TaskIcon $done={task.status === "DONE"}>
-                                        {task.status === "DONE" ? (
-                                            <TaskAltOutlinedIcon />
-                                        ) : (
-                                            <TaskAltOutlinedIcon />
-                                        )}
+                                        <TaskAltOutlinedIcon />
                                     </TaskIcon>
 
                                     <TaskContent>
@@ -897,7 +917,9 @@ function ProjectDetails() {
                                     )}
 
                                     <SmallButton
-                                        onClick={() => deleteTask(task.id)}
+                                        onClick={() =>
+                                            deleteTask(task.id)
+                                        }
                                     >
                                         Delete
                                     </SmallButton>
@@ -935,7 +957,9 @@ function ProjectDetails() {
                                     </ActivityMain>
 
                                     <ActivityTime>
-                                        {formatDateTime(activity.createdAt)}
+                                        {formatDateTime(
+                                            activity.createdAt
+                                        )}
                                     </ActivityTime>
                                 </ActivityText>
                             </ActivityItem>
@@ -946,7 +970,9 @@ function ProjectDetails() {
 
             <Dialog
                 open={editOpen}
-                onClose={() => !saving && setEditOpen(false)}
+                onClose={() =>
+                    !saving && setEditOpen(false)
+                }
                 fullWidth
                 maxWidth="sm"
             >
@@ -995,12 +1021,15 @@ function ProjectDetails() {
                                 <MenuItem value="PLANNING">
                                     Planning
                                 </MenuItem>
+
                                 <MenuItem value="IN_PROGRESS">
                                     In progress
                                 </MenuItem>
+
                                 <MenuItem value="COMPLETED">
                                     Completed
                                 </MenuItem>
+
                                 <MenuItem value="ON_HOLD">
                                     On hold
                                 </MenuItem>
@@ -1017,10 +1046,21 @@ function ProjectDetails() {
                                     setEditPriority(e.target.value)
                                 }
                             >
-                                <MenuItem value="LOW">Low</MenuItem>
-                                <MenuItem value="MEDIUM">Medium</MenuItem>
-                                <MenuItem value="HIGH">High</MenuItem>
-                                <MenuItem value="URGENT">Urgent</MenuItem>
+                                <MenuItem value="LOW">
+                                    Low
+                                </MenuItem>
+
+                                <MenuItem value="MEDIUM">
+                                    Medium
+                                </MenuItem>
+
+                                <MenuItem value="HIGH">
+                                    High
+                                </MenuItem>
+
+                                <MenuItem value="URGENT">
+                                    Urgent
+                                </MenuItem>
                             </Select>
                         </FormControl>
 
@@ -1072,26 +1112,36 @@ function ProjectDetails() {
                             },
                         }}
                     >
-                        {saving ? "Saving..." : "Save Changes"}
+                        {saving
+                            ? "Saving..."
+                            : "Save Changes"}
                     </Button>
                 </DialogActions>
             </Dialog>
 
             <Dialog
                 open={deleteOpen}
-                onClose={() => !deleting && setDeleteOpen(false)}
+                onClose={() =>
+                    !deleting &&
+                    setDeleteOpen(false)
+                }
             >
-                <DialogTitle>Delete project?</DialogTitle>
+                <DialogTitle>
+                    Delete project?
+                </DialogTitle>
 
                 <DialogContent>
                     <Typography>
-                        Are you sure you want to delete this project?
+                        Are you sure you want to delete this
+                        project?
                     </Typography>
                 </DialogContent>
 
                 <DialogActions>
                     <Button
-                        onClick={() => setDeleteOpen(false)}
+                        onClick={() =>
+                            setDeleteOpen(false)
+                        }
                         disabled={deleting}
                     >
                         Cancel
@@ -1103,18 +1153,25 @@ function ProjectDetails() {
                         onClick={deleteProject}
                         disabled={deleting}
                     >
-                        {deleting ? "Deleting..." : "Delete"}
+                        {deleting
+                            ? "Deleting..."
+                            : "Delete"}
                     </Button>
                 </DialogActions>
             </Dialog>
 
             <Dialog
                 open={taskOpen}
-                onClose={() => !taskSaving && setTaskOpen(false)}
+                onClose={() =>
+                    !taskSaving &&
+                    setTaskOpen(false)
+                }
                 fullWidth
                 maxWidth="sm"
             >
-                <DialogTitle>Add Task</DialogTitle>
+                <DialogTitle>
+                    Add Task
+                </DialogTitle>
 
                 <DialogContent>
                     <Box
@@ -1142,7 +1199,9 @@ function ProjectDetails() {
                             label="Description"
                             value={taskDescription}
                             onChange={(e) =>
-                                setTaskDescription(e.target.value)
+                                setTaskDescription(
+                                    e.target.value
+                                )
                             }
                         />
 
@@ -1175,29 +1234,75 @@ function ProjectDetails() {
                         </FormControl>
 
                         <FormControl fullWidth>
-                            <InputLabel>Priority</InputLabel>
+                            <InputLabel>
+                                Priority
+                            </InputLabel>
 
                             <Select
                                 value={taskPriority}
                                 label="Priority"
                                 onChange={(e) =>
-                                    setTaskPriority(e.target.value)
+                                    setTaskPriority(
+                                        e.target.value
+                                    )
                                 }
                             >
-                                <MenuItem value="LOW">Low</MenuItem>
-                                <MenuItem value="MEDIUM">Medium</MenuItem>
-                                <MenuItem value="HIGH">High</MenuItem>
+                                <MenuItem value="LOW">
+                                    Low
+                                </MenuItem>
+
+                                <MenuItem value="MEDIUM">
+                                    Medium
+                                </MenuItem>
+
+                                <MenuItem value="HIGH">
+                                    High
+                                </MenuItem>
+
                                 <MenuItem value="URGENT">
                                     Urgent
                                 </MenuItem>
                             </Select>
                         </FormControl>
+
+                        <FormControl fullWidth>
+                            <InputLabel>
+                                Assign to
+                            </InputLabel>
+
+                            <Select
+                                value={assignedTo}
+                                label="Assign to"
+                                onChange={(e) =>
+                                    setAssignedTo(
+                                        e.target.value
+                                    )
+                                }
+                            >
+                                <MenuItem value="">
+                                    Unassigned
+                                </MenuItem>
+
+                                {teamMembers.map((member) => (
+                                    <MenuItem
+                                        key={member.id}
+                                        value={member.id}
+                                    >
+                                        {member.name}
+                                    </MenuItem>
+                                ))}
+                            </Select>
+                        </FormControl>
+
                         <TextField
                             fullWidth
                             type="date"
+                            label="Due Date"
                             value={taskDueDate}
                             onChange={(e) =>
-                                setTaskDueDate(e.target.value)
+                                setTaskDueDate(
+                                    e.target.value
+                                )
                             }
                             InputLabelProps={{
                                 shrink: true,
@@ -1208,7 +1313,9 @@ function ProjectDetails() {
 
                 <DialogActions>
                     <Button
-                        onClick={() => setTaskOpen(false)}
+                        onClick={() =>
+                            setTaskOpen(false)
+                        }
                         disabled={taskSaving}
                     >
                         Cancel
@@ -1225,7 +1332,9 @@ function ProjectDetails() {
                             },
                         }}
                     >
-                        {taskSaving ? "Creating..." : "Create Task"}
+                        {taskSaving
+                            ? "Creating..."
+                            : "Create Task"}
                     </Button>
                 </DialogActions>
             </Dialog>

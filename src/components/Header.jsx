@@ -2,10 +2,10 @@ import { useState, useEffect, useRef } from "react";
 import { useNavigate } from "react-router";
 import styled from "styled-components";
 import {
-    Search,
-    NotificationsNone,
-    ForumOutlined,
+  Search,
+  ForumOutlined,
 } from "@mui/icons-material";
+import Notifications from "./Notifications";
 import API_URL from "../store/api";
 import useAuth from "../store/useAuth";
 
@@ -155,7 +155,7 @@ const DropdownMessage = styled.div`
   text-align: center;
 `;
 
-const HeaderButton = styled.div`
+const HeaderButton = styled.button`
   width: 40px;
   height: 40px;
   border: 1px solid #ddd;
@@ -171,6 +171,10 @@ const HeaderButton = styled.div`
   svg {
     font-size: 20px;
   }
+
+  &:hover {
+    background: #f8f8f8;
+  }
 `;
 
 const Avatar = styled.img`
@@ -179,176 +183,253 @@ const Avatar = styled.img`
   border-radius: 50%;
   object-fit: cover;
   flex-shrink: 0;
+  cursor: pointer;
+
+  &:hover {
+    opacity: 0.85;
+  }
 `;
 
 const statusMap = {
-    PLANNING: "Planning",
-    IN_PROGRESS: "In progress",
-    COMPLETED: "Completed",
-    ON_HOLD: "On hold",
-    TODO: "To do",
-    IN_REVIEW: "In review",
-    DONE: "Done",
+  PLANNING: "Planning",
+  IN_PROGRESS: "In progress",
+  COMPLETED: "Completed",
+  ON_HOLD: "On hold",
+  TODO: "To do",
+  IN_REVIEW: "In review",
+  DONE: "Done",
 };
 
 function formatStatus(status) {
-    return statusMap[status] || status || "";
+  return statusMap[status] || status || "";
 }
 
 function getArray(res) {
-    if (Array.isArray(res)) return res;
-    if (Array.isArray(res?.data)) return res.data;
-    if (Array.isArray(res?.projects)) return res.projects;
-    if (Array.isArray(res?.tasks)) return res.tasks;
-    return [];
+  if (Array.isArray(res)) return res;
+  if (Array.isArray(res?.data)) return res.data;
+  if (Array.isArray(res?.projects)) return res.projects;
+  if (Array.isArray(res?.tasks)) return res.tasks;
+  return [];
 }
 
 function Header() {
-    const navigate = useNavigate();
-    const { user, token } = useAuth();
-    const [query, setQuery] = useState("");
-    const [projects, setProjects] = useState([]);
-    const [tasks, setTasks] = useState([]);
-    const [loading, setLoading] = useState(false);
-    const [isOpen, setIsOpen] = useState(false);
-    const searchRef = useRef(null);
+  const navigate = useNavigate();
+  const { user, token } = useAuth();
 
-    useEffect(() => {
-        if (!query.trim()) {
-            setProjects([]);
-            setTasks([]);
-            setLoading(false);
-            return;
-        }
+  const [query, setQuery] = useState("");
+  const [projects, setProjects] = useState([]);
+  const [tasks, setTasks] = useState([]);
+  const [loading, setLoading] = useState(false);
+  const [isOpen, setIsOpen] = useState(false);
 
-        setLoading(true);
-        const timer = setTimeout(() => {
-            const headers = token ? { Authorization: `Bearer ${token}` } : {};
+  const searchRef = useRef(null);
 
-            Promise.all([
-                fetch(`${API_URL}/api/projects?search=${encodeURIComponent(query.trim())}`, { headers }),
-                fetch(`${API_URL}/api/tasks?search=${encodeURIComponent(query.trim())}`, { headers }),
-            ])
-                .then(async ([projectsRes, tasksRes]) => {
-                    if (!projectsRes.ok || !tasksRes.ok) {
-                        throw new Error("Search failed");
-                    }
-                    const [projectsData, tasksData] = await Promise.all([
-                        projectsRes.json(),
-                        tasksRes.json(),
-                    ]);
-                    setProjects(getArray(projectsData));
-                    setTasks(getArray(tasksData));
-                    setLoading(false);
-                })
-                .catch(() => {
-                    setProjects([]);
-                    setTasks([]);
-                    setLoading(false);
-                });
-        }, 300);
+  useEffect(() => {
+    if (!query.trim()) {
+      setProjects([]);
+      setTasks([]);
+      setLoading(false);
+      return;
+    }
 
-        return () => clearTimeout(timer);
-    }, [query, token]);
+    setLoading(true);
 
-    useEffect(() => {
-        const handleClickOutside = (event) => {
-            if (searchRef.current && !searchRef.current.contains(event.target)) {
-                setIsOpen(false);
-            }
-        };
+    const timer = setTimeout(() => {
+      const headers = token
+        ? { Authorization: `Bearer ${token}` }
+        : {};
 
-        document.addEventListener("mousedown", handleClickOutside);
-        return () => {
-            document.removeEventListener("mousedown", handleClickOutside);
-        };
-    }, []);
+      Promise.all([
+        fetch(
+          `${API_URL}/api/projects?search=${encodeURIComponent(
+            query.trim()
+          )}`,
+          { headers }
+        ),
+        fetch(
+          `${API_URL}/api/tasks?search=${encodeURIComponent(
+            query.trim()
+          )}`,
+          { headers }
+        ),
+      ])
+        .then(async ([projectsRes, tasksRes]) => {
+          if (!projectsRes.ok || !tasksRes.ok) {
+            throw new Error("Search failed");
+          }
 
-    const hasResults = projects.length > 0 || tasks.length > 0;
-    const showDropdown = isOpen && query.trim().length > 0;
-    const avatarSrc = user?.avatar || "https://i.pravatar.cc/100?img=12";
+          const [projectsData, tasksData] =
+            await Promise.all([
+              projectsRes.json(),
+              tasksRes.json(),
+            ]);
 
-    return (
-        <HeaderBox>
-            <SearchWrapper ref={searchRef}>
-                <SearchBox onClick={() => setIsOpen(true)}>
-                    <Search />
-                    <input
-                        placeholder="Search"
-                        value={query}
-                        onChange={(e) => {
-                            setQuery(e.target.value);
-                            setIsOpen(true);
-                        }}
-                        onFocus={() => setIsOpen(true)}
-                    />
-                </SearchBox>
+          setProjects(getArray(projectsData));
+          setTasks(getArray(tasksData));
+          setLoading(false);
+        })
+        .catch(() => {
+          setProjects([]);
+          setTasks([]);
+          setLoading(false);
+        });
+    }, 300);
 
-                {showDropdown && (
-                    <Dropdown>
-                        {loading && <DropdownMessage>Loading...</DropdownMessage>}
+    return () => clearTimeout(timer);
+  }, [query, token]);
 
-                        {!loading && !hasResults && (
-                            <DropdownMessage>No results found</DropdownMessage>
-                        )}
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (
+        searchRef.current &&
+        !searchRef.current.contains(event.target)
+      ) {
+        setIsOpen(false);
+      }
+    };
 
-                        {!loading && hasResults && (
-                            <>
-                                {projects.length > 0 && (
-                                    <DropdownSection>
-                                        <DropdownSectionTitle>Projects</DropdownSectionTitle>
-                                        {projects.map((project) => (
-                                            <DropdownItem
-                                                key={project.id}
-                                                onClick={() => {
-                                                    navigate(`/projects/${project.id}`);
-                                                    setIsOpen(false);
-                                                }}
-                                            >
-                                                <ItemTitle>{project.name}</ItemTitle>
-                                                <ItemStatus>{formatStatus(project.status)}</ItemStatus>
-                                            </DropdownItem>
-                                        ))}
-                                    </DropdownSection>
-                                )}
-
-                                {tasks.length > 0 && (
-                                    <DropdownSection>
-                                        <DropdownSectionTitle>Tasks</DropdownSectionTitle>
-                                        {tasks.map((task) => (
-                                            <DropdownItem
-                                                key={task.id}
-                                                onClick={() => {
-                                                    navigate(`/tasks/${task.id}`);
-                                                    setIsOpen(false);
-                                                }}
-                                            >
-                                                <ItemTitle>{task.title}</ItemTitle>
-                                                <ItemStatus>{formatStatus(task.status)}</ItemStatus>
-                                            </DropdownItem>
-                                        ))}
-                                    </DropdownSection>
-                                )}
-                            </>
-                        )}
-                    </Dropdown>
-                )}
-            </SearchWrapper>
-
-            <HeaderButton>
-                <NotificationsNone />
-            </HeaderButton>
-
-            <HeaderButton>
-                <ForumOutlined />
-            </HeaderButton>
-
-            <Avatar
-                src={avatarSrc}
-                alt={user?.name || "Profile"}
-            />
-        </HeaderBox>
+    document.addEventListener(
+      "mousedown",
+      handleClickOutside
     );
+
+    return () => {
+      document.removeEventListener(
+        "mousedown",
+        handleClickOutside
+      );
+    };
+  }, []);
+
+  const hasResults =
+    projects.length > 0 || tasks.length > 0;
+
+  const showDropdown =
+    isOpen && query.trim().length > 0;
+
+  const avatarSrc =
+    user?.avatar ||
+    "https://i.pravatar.cc/100?img=12";
+
+  return (
+    <HeaderBox>
+      <SearchWrapper ref={searchRef}>
+        <SearchBox
+          onClick={() => setIsOpen(true)}
+        >
+          <Search />
+
+          <input
+            placeholder="Search"
+            value={query}
+            onChange={(e) => {
+              setQuery(e.target.value);
+              setIsOpen(true);
+            }}
+            onFocus={() => setIsOpen(true)}
+          />
+        </SearchBox>
+
+        {showDropdown && (
+          <Dropdown>
+            {loading && (
+              <DropdownMessage>
+                Loading...
+              </DropdownMessage>
+            )}
+
+            {!loading && !hasResults && (
+              <DropdownMessage>
+                No results found
+              </DropdownMessage>
+            )}
+
+            {!loading && hasResults && (
+              <>
+                {projects.length > 0 && (
+                  <DropdownSection>
+                    <DropdownSectionTitle>
+                      Projects
+                    </DropdownSectionTitle>
+
+                    {projects.map(
+                      (project) => (
+                        <DropdownItem
+                          key={project.id}
+                          onClick={() => {
+                            navigate(
+                              `/projects/${project.id}`
+                            );
+                            setIsOpen(false);
+                          }}
+                        >
+                          <ItemTitle>
+                            {
+                              project.name
+                            }
+                          </ItemTitle>
+
+                          <ItemStatus>
+                            {formatStatus(
+                              project.status
+                            )}
+                          </ItemStatus>
+                        </DropdownItem>
+                      )
+                    )}
+                  </DropdownSection>
+                )}
+
+                {tasks.length > 0 && (
+                  <DropdownSection>
+                    <DropdownSectionTitle>
+                      Tasks
+                    </DropdownSectionTitle>
+
+                    {tasks.map((task) => (
+                      <DropdownItem
+                        key={task.id}
+                        onClick={() => {
+                          navigate(
+                            `/tasks/${task.id}`
+                          );
+                          setIsOpen(false);
+                        }}
+                      >
+                        <ItemTitle>
+                          {task.title}
+                        </ItemTitle>
+
+                        <ItemStatus>
+                          {formatStatus(
+                            task.status
+                          )}
+                        </ItemStatus>
+                      </DropdownItem>
+                    ))}
+                  </DropdownSection>
+                )}
+              </>
+            )}
+          </Dropdown>
+        )}
+      </SearchWrapper>
+
+      <Notifications />
+
+      <HeaderButton
+        onClick={() => navigate("/messages")}
+      >
+        <ForumOutlined />
+      </HeaderButton>
+
+      <Avatar
+        src={avatarSrc}
+        alt={user?.name || "Profile"}
+        onClick={() => navigate("/profile")}
+      />
+    </HeaderBox>
+  );
 }
 
 export default Header;

@@ -278,200 +278,208 @@ const Footer = styled.div`
 `;
 
 function VerifyOTP() {
-    const navigate = useNavigate();
-    const location = useLocation();
+  const navigate = useNavigate();
+  const location = useLocation();
 
-    const email = location.state?.email || "";
+  const email = location.state?.email || "";
 
-    const [code, setCode] = useState(["", "", "", "", "", ""]);
-    const [timer, setTimer] = useState(30);
-    const [loading, setLoading] = useState(false);
-    const [message, setMessage] = useState("");
+  const from = location.state?.from || "";
 
-    const inputRefs = useRef([]);
+  const [code, setCode] = useState(["", "", "", "", "", ""]);
+  const [timer, setTimer] = useState(30);
+  const [loading, setLoading] = useState(false);
+  const [message, setMessage] = useState("");
 
-    useEffect(() => {
-        if (timer === 0) return;
+  const inputRefs = useRef([]);
 
-        const time = setInterval(() => {
-            setTimer((prev) => prev - 1);
-        }, 1000);
+  useEffect(() => {
+    if (timer === 0) return;
 
-        return () => clearInterval(time);
-    }, [timer]);
+    const time = setInterval(() => {
+      setTimer((prev) => prev - 1);
+    }, 1000);
 
-    const handleChange = (value, index) => {
-        if (!/^\d?$/.test(value)) return;
+    return () => clearInterval(time);
+  }, [timer]);
 
-        const newCode = [...code];
-        newCode[index] = value;
-        setCode(newCode);
+  const handleChange = (value, index) => {
+    if (!/^\d?$/.test(value)) return;
 
-        if (value && index < 5) {
-            inputRefs.current[index + 1]?.focus();
+    const newCode = [...code];
+    newCode[index] = value;
+    setCode(newCode);
+
+    if (value && index < 5) {
+      inputRefs.current[index + 1]?.focus();
+    }
+  };
+
+  const handleKeyDown = (e, index) => {
+    if (e.key === "Backspace" && !code[index] && index > 0) {
+      inputRefs.current[index - 1]?.focus();
+    }
+  };
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+
+    const otp = code.join("");
+
+    if (otp.length !== 6) {
+      setMessage("Enter the 6-digit code!");
+      return;
+    }
+
+    setMessage("");
+    setLoading(true);
+
+    try {
+      const response = await fetch(
+        `${API_URL}/api/auth/verify-otp`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            email,
+            otp,
+          }),
         }
-    };
+      );
 
-    const handleKeyDown = (e, index) => {
-        if (e.key === "Backspace" && !code[index] && index > 0) {
-            inputRefs.current[index - 1]?.focus();
-        }
-    };
+      const result = await response.json();
 
-    const handleSubmit = async (e) => {
-        e.preventDefault();
+      if (!response.ok) {
+        setMessage(result.message || "Invalid OTP");
+        return;
+      }
 
-        const otp = code.join("");
+      navigate("/reset-password", {
+        state: {
+          email,
+          otp,
+          from,
+        },
+      });
 
-        if (otp.length !== 6) {
-            setMessage("Enter the 6-digit code!");
-            return;
-        }
+    } catch {
+      setMessage("Server bilan bog'lanishda xatolik");
+    } finally {
+      setLoading(false);
+    }
+  };
 
-        setMessage("");
-        setLoading(true);
+  const resendCode = async () => {
+    if (timer > 0) return;
 
-        try {
-            const response = await fetch(
-                `${API_URL}/api/auth/verify-otp`,
-                {
-                    method: "POST",
-                    headers: {
-                        "Content-Type": "application/json",
-                    },
-                    body: JSON.stringify({
-                        email,
-                        otp,
-                    }),
-                }
-            );
+    await fetch(`${API_URL}/api/auth/forgot-password`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        email,
+      }),
+    });
 
-            const result = await response.json();
+    setCode(["", "", "", "", "", ""]);
+    setTimer(30);
+    setMessage("");
 
-            if (!response.ok) {
-                setMessage(result.message || "Invalid OTP");
-                return;
-            }
+    setTimeout(() => {
+      inputRefs.current[0]?.focus();
+    }, 0);
+  };
 
-            navigate("/reset-password", { state: { email, otp } });
+  return (
+    <Wrapper>
+      <Card>
+        <ImageSide>
+          <img
+            src="https://i.pinimg.com/736x/41/74/7e/41747e78e01b6cde9c6201cd8ad8546d.jpg"
+            alt="Taskflow"
+          />
+        </ImageSide>
 
-        } catch {
-            setMessage("Server bilan bog'lanishda xatolik");
-        } finally {
-            setLoading(false);
-        }
-    };
+        <FormSide>
+          <div>
+            <Logo>
+              <img src={taskflowLogo} alt="Taskflow" />
+              Taskflow
+            </Logo>
 
-    const resendCode = async () => {
-        if (timer > 0) return;
+            <Content>
+              <Back onClick={() => navigate("/forget")}>
+                <ArrowLeft size={14} />
+                Back
+              </Back>
 
-        await fetch(`${API_URL}/api/auth/forgot-password`, {
-            method: "POST",
-            headers: {
-                "Content-Type": "application/json",
-            },
-            body: JSON.stringify({
-                email,
-            }),
-        });
+              <Title>Two-factor authentication</Title>
 
-        setCode(["", "", "", "", "", ""]);
-        setTimer(30);
-        setMessage("");
+              <Text>
+                Check your email! We've sent a 6-digit code to{" "}
+                <strong>{email}</strong>. Enter it below to continue.
+              </Text>
 
-        setTimeout(() => {
-            inputRefs.current[0]?.focus();
-        }, 0);
-    };
-
-    return (
-        <Wrapper>
-            <Card>
-                <ImageSide>
-                    <img
-                        src="https://i.pinimg.com/736x/41/74/7e/41747e78e01b6cde9c6201cd8ad8546d.jpg"
-                        alt="Taskflow"
+              <form onSubmit={handleSubmit}>
+                <OTPRow>
+                  {code.map((item, index) => (
+                    <OTPInput
+                      key={index}
+                      ref={(el) => {
+                        inputRefs.current[index] = el;
+                      }}
+                      value={item}
+                      maxLength={1}
+                      inputMode="numeric"
+                      onChange={(e) =>
+                        handleChange(e.target.value, index)
+                      }
+                      onKeyDown={(e) =>
+                        handleKeyDown(e, index)
+                      }
                     />
-                </ImageSide>
+                  ))}
+                </OTPRow>
 
-                <FormSide>
-                    <div>
-                        <Logo>
-                            <img src={taskflowLogo} alt="Taskflow" />
-                            Taskflow
-                        </Logo>
+                <Resend>
+                  Didn't receive the code?{" "}
+                  {timer > 0 ? (
+                    `Resend in 00:${String(timer).padStart(2, "0")}`
+                  ) : (
+                    <span onClick={resendCode}>Resend</span>
+                  )}
+                </Resend>
 
-                        <Content>
-                            <Back onClick={() => navigate("/forget")}>
-                                <ArrowLeft size={14} />
-                                Back
-                            </Back>
+                <Button type="submit" disabled={loading}>
+                  {loading ? (
+                    <CircularProgress
+                      size={20}
+                      sx={{ color: "white" }}
+                    />
+                  ) : (
+                    "Verify"
+                  )}
+                </Button>
 
-                            <Title>Two-factor authentication</Title>
+                {message && <ErrorText>{message}</ErrorText>}
+              </form>
+            </Content>
+          </div>
 
-                            <Text>
-                                Check your email! We've sent a 6-digit code to{" "}
-                                <strong>{email}</strong>. Enter it below to continue.
-                            </Text>
+          <Footer>
+            <span>© Taskflow 2026</span>
 
-                            <form onSubmit={handleSubmit}>
-                                <OTPRow>
-                                    {code.map((item, index) => (
-                                        <OTPInput
-                                            key={index}
-                                            ref={(el) => {
-                                                inputRefs.current[index] = el;
-                                            }}
-                                            value={item}
-                                            maxLength={1}
-                                            inputMode="numeric"
-                                            onChange={(e) =>
-                                                handleChange(e.target.value, index)
-                                            }
-                                            onKeyDown={(e) =>
-                                                handleKeyDown(e, index)
-                                            }
-                                        />
-                                    ))}
-                                </OTPRow>
-
-                                <Resend>
-                                    Didn't receive the code?{" "}
-                                    {timer > 0 ? (
-                                        `Resend in 00:${String(timer).padStart(2, "0")}`
-                                    ) : (
-                                        <span onClick={resendCode}>Resend</span>
-                                    )}
-                                </Resend>
-
-                                <Button type="submit" disabled={loading}>
-                                    {loading ? (
-                                        <CircularProgress
-                                            size={20}
-                                            sx={{ color: "white" }}
-                                        />
-                                    ) : (
-                                        "Verify"
-                                    )}
-                                </Button>
-
-                                {message && <ErrorText>{message}</ErrorText>}
-                            </form>
-                        </Content>
-                    </div>
-
-                    <Footer>
-                        <span>© Taskflow 2026</span>
-
-                        <div>
-                            <a href="#">Privacy Policy</a>
-                            <a href="#">Support</a>
-                        </div>
-                    </Footer>
-                </FormSide>
-            </Card>
-        </Wrapper>
-    );
+            <div>
+              <a href="#">Privacy Policy</a>
+              <a href="#">Support</a>
+            </div>
+          </Footer>
+        </FormSide>
+      </Card>
+    </Wrapper>
+  );
 }
 
 export default VerifyOTP;
