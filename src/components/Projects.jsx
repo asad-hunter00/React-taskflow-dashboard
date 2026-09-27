@@ -396,7 +396,7 @@ const Select = styled.select`
   color: ${({ value }) => (value ? "#1a1a1a" : "#999")};
 `;
 
-const ModalFooter = styled.div`
+const ModallFooter = styled.div`
   display: flex;
   justify-content: flex-end;
   gap: 10px;
@@ -792,7 +792,7 @@ function Projects() {
 
               {formError && <FormError>{formError}</FormError>}
 
-              <ModalFooter>
+              <ModallFooter>
                 <CancelButton type="button" onClick={closeModal}>
                   Cancel
                 </CancelButton>
@@ -807,7 +807,7 @@ function Projects() {
                     </>
                   )}
                 </SubmitButton>
-              </ModalFooter>
+              </ModallFooter>
             </form>
           </ModalBox>
         </ModalOverlay>
